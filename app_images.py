@@ -81,41 +81,54 @@ def path_to_base64(image_path: str):
                 image_file.read()).decode('utf-8')
 
         # Determine the MIME type based on file extension
-        mime_type = image_path.split('.')[-1].lower()
+        # mime_type = image_path.split('.')[-1].lower()
         # if mime_type not in ["png", "jpg", "jpeg", "gif", "bmp", "webp"]:
         #     raise ValueError("Unsupported image format")
+        # return {"status": "success", "result": encoded_string, "mime_type": mime_type}
 
-        # Return as a data URI
-        # return f"data:image/{mime_type};base64,{encoded_string}"
-        return {"status": "success", "result": encoded_string, "mime_type": mime_type}
+        return {"status": "success", "result": encoded_string}
 
     except Exception as e:
         return {'status': "error", "message": f"Error: {e}", "path": image_path}
 
 
-def image_list_to_base64(image_list: list):
+def image_list_to_base64(image_list: list, image_folder: str, thread_name: str):
     """Converts the list of image paths to base64 format
 
     Args:
         image_list (list): List of image paths
+        image_folder (str): Path of Folder containing the images
+        thread_name (str): Name of the thread
 
     Returns:
-        list: List of base64 encoded images
+        dict: Dictionary containing the status and base64 encoded images
     """
 
     base64_images = []
-    mime_types = []
+    error_flag = False
+    error_log = ""
+    error_path = ""
+
     for image_path in image_list:
+        # image is stored in: Threads/images/thread_name/image_name
+        # Because, in case of thread deletion, we can delete the whole image folder of that thread
+        image_path = f"{image_folder}/{thread_name}/{image_path}"
         result = path_to_base64(image_path)
 
         if result['status'] == 'error':
-            return {"status": "error", "result": result['message'], "path": result['path']}
-
+            error_flag = True
+            error_log += f"Error: {result['message']}"
+            error_path = result['path']
+            break
+            
         else:
             base64_images.append(result['result'])
-            mime_types.append(result['mime_type'])
 
-    return {"status": "success", "result": base64_images, "mime_types": mime_types}
+    # Return the failure of processing single image as failure of processing entire list of images!!! The error of that particular image is returned as it is:
+    if error_flag:
+        return {"status": "error", "message": error_log, "path": error_path}
+    else:
+        return {"status": "success", "result": base64_images}
 
 
 def get_image_from_b64(base64_string: str, mime: str):
