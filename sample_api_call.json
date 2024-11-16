@@ -6,6 +6,10 @@
     {
         "role": "user",
         "content": "prompt",
+        "image_files": [
+            "filename.png",
+            "these image_files strings will be ignored by the LLM, since image_files is not a valid key in the LLM"
+        ],
         "images": [
             "base64_encoded_image1",
             "base64_encoded_image2"
