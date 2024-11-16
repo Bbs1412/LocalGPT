@@ -39,6 +39,15 @@ def save_conversation(
         model_name: str,
         thread_folder: str):
     """Save the conversation to a json file and update the config in same file with the last used model name
+
+    Args:
+        messages (list[dict]): List of messages to save
+        thread_name (str): Name of the thread to save
+        model_name (str): Name of the model used in the thread
+        thread_folder (str): Folder where the thread is saved
+
+    Returns:
+        dict: Dictionary containing the status of the saving
     """
     ts = get_timestamp()
 
@@ -73,6 +82,7 @@ def load_conversation(thread_name: str, thread_folder: str, image_folder: str):
     Args:
         thread_name (str): Name of the thread to load
         thread_folder (str): Folder where the thread is saved
+        image_folder (str): Folder where the images are saved under threads' folders
 
     Returns:
         dict: Dictionary containing the messages, thread name, model name and last saved timestamp
@@ -125,7 +135,12 @@ def rename_thread(
     """Rename the thread and its json file
 
     Args:
-        new_name (str): New name for the thread and json file
+        old_thread_name (str): Old name of the thread
+        new_thread_name (str): New name of the thread
+        thread_folder (str): Folder where the thread is saved
+
+    Returns:
+        dict: Dictionary containing the status of the renaming
     """
 
     try:
@@ -181,7 +196,9 @@ def delete_thread(
     Args:
         thread_name (str): Name of the thread to delete
         thread_folder (str): Folder where the thread is saved
+        deleted_threads_folder (str): Folder where the deleted threads are moved
         image_folder (str): Folder where the images are saved under threads' folders
+        deleted_images_folder (str): Folder where the deleted images are moved
 
     Returns:
         dict: Dictionary containing the status of the deletion
