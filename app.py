@@ -450,7 +450,8 @@ if inp := st.chat_input('Type your message / prompt here... [Attachments are als
         else:
             st.session_state.last_saved = resp['timestamp']
 
-            st.toast("Conversation saved successfully!", icon=st.session_state.icons['save_thread'])
+            st.toast("Conversation saved successfully!",
+                     icon=st.session_state.icons['save_thread'])
 
 
 # ---------------------------------------------------------------------------------------
