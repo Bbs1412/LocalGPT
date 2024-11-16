@@ -106,23 +106,28 @@ def load_conversation(thread_name: str, thread_folder: str, image_folder: str):
         return {"status": "error", "message": f"Failed to load thread. \n\n {str(e)}"}
 
 
-# # Rename the thread file:
-# def rename_thread(new_name: str):
-#     """Rename the thread and its json file
+# Rename the thread file:
+def rename_thread(
+        old_thread_name: str,
+        new_thread_name: str,
+        thread_folder: str,
+):
+    """Rename the thread and its json file
 
-#     Args:
-#         new_name (str): New name for the thread and json file
-#     """
-#     old_filename = f"{st.session_state.thread_folder}/{st.session_state.thread_name}.json"
-#     new_filename = f"{st.session_state.thread_folder}/{new_name}.json"
+    Args:
+        new_name (str): New name for the thread and json file
+    """
 
-#     if os.path.exists(old_filename):
-#         os.rename(old_filename, new_filename)
+    try:
+        old_filename = f"{thread_folder}/{old_thread_name}.json"
+        new_filename = f"{thread_folder}/{new_thread_name}.json"
 
-#     st.session_state.thread_name = new_name
-#     save_conversation(f"{st.session_state.thread_folder}/{new_name}.json")
-#     st.toast("Thread renamed successfully!",
-#              icon=st.session_state.icons['rename_thread'])
+        if os.path.exists(old_filename):
+            os.rename(old_filename, new_filename)
+
+        return {"status": "success"}
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to rename thread. \n\n {str(e)}"}
 
 
 # # Load thread names by latest first order:
