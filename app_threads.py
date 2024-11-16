@@ -22,6 +22,16 @@ def get_timestamp():
     return datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
 
+# Get the time-stamp of the current time, suitable for filenames:
+def get_timestamp_filename():
+    """Get current timestamp in a formatted string, suitable for filenames
+
+    Returns:
+        str: Formatted timestamp
+    """
+    return datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+
+
 # Function to save conversation to a file:
 def save_conversation(
         messages: list[dict],
@@ -142,6 +152,7 @@ def load_thread_names(thread_folder: str):
     Returns:
         list: List of thread names
     """
+
     thread_names = []
     files = []
     for file in os.listdir(thread_folder):
@@ -157,36 +168,56 @@ def load_thread_names(thread_folder: str):
     return thread_names
 
 
-# # Delete the thread:
-# def delete_thread(thread_name: str):
-#     """Deletes the thread from page view, but actually moves it to 'deleted' folder
+# Delete the thread:
+def delete_thread(
+        thread_name: str,
+        thread_folder: str,
+        deleted_threads_folder: str,
+        image_folder: str,
+        deleted_images_folder: str
+        ):
+    """Deletes the thread from page view, but actually moves it to 'deleted' folder
 
-#     Args:
-#         thread_name (str): Name of the thread to delete
-#     """
+    Args:
+        thread_name (str): Name of the thread to delete
+        thread_folder (str): Folder where the thread is saved
+        image_folder (str): Folder where the images are saved under threads' folders
 
-#     old_filename = f"{st.session_state.thread_folder}/{thread_name}.json"
-#     new_filename = f"{st.session_state.thread_folder}/deleted/{thread_name}.json"
+    Returns:
+        dict: Dictionary containing the status of the deletion
+    """
 
-#     # Create deleted folder if not exists
-#     if not os.path.exists(f"{st.session_state.thread_folder}/deleted"):
-#         os.makedirs(f"{st.session_state.thread_folder}/deleted")
+    try:
+        old_filename = f"{thread_folder}/{thread_name}.json"
+        new_filename = f"{deleted_threads_folder}/{thread_name}.json"
 
-#     # If file already exists in deleted folder, add timestamp to new filename:
-#     if os.path.exists(new_filename):
-#         new_filename = f"{st.session_state.thread_folder}/deleted/{thread_name}_{get_timestamp_filename()}.json"
+        # If file already exists in deleted folder, add timestamp to new filename:
+        if os.path.exists(new_filename):
+            new_filename = f"{deleted_threads_folder}/{thread_name}_{get_timestamp_filename()}.json"
 
-#     # Move the file to deleted folder
-#     if os.path.exists(old_filename):
-#         os.rename(old_filename, new_filename)
+        # Move the file to deleted folder
+        if os.path.exists(old_filename):
+            os.rename(old_filename, new_filename)
 
-#     st.session_state.thread_name = "New Thread"
-#     st.session_state.pop('messages')
-#     # st.rerun()
+        # Move the thread's images folder to deleted folder:
+        old_image_folder = f"{image_folder}/{thread_name}"
+        new_image_folder = f"{deleted_images_folder}/{thread_name}/"
 
-#     st.toast(f"Thread `{thread_name}` deleted successfully!",
-#              icon=st.session_state.icons['delete_thread'])
+        if not os.path.exists(new_image_folder):
+            os.makedirs(new_image_folder)
 
+        if os.path.exists(old_image_folder):
+            for file in os.listdir(old_image_folder):
+                os.rename(f"{old_image_folder}/{file}", f"{new_image_folder}/{file}")
+
+            os.rmdir(old_image_folder)
+
+        return {"status": "success"}
+
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to delete thread. \n\n {str(e)}"}
+    
+        
 # ---------------------------------------------------------------------------------------
 # Test calls:
 # ---------------------------------------------------------------------------------------
@@ -229,4 +260,19 @@ def load_thread_names(thread_folder: str):
 #     thread_folder="Threads"
 # )
 
+# print(json.dumps(a, indent=4))
+
+# # Load thread names:
+# thread_names = load_thread_names("Threads")
+# print(thread_names)
+
+
+# # Delete thread:
+# a = delete_thread(
+#     thread_name="test_save_thread",
+#     thread_folder="Threads",
+#     deleted_threads_folder="Threads/deleted",
+#     image_folder="Threads/images",
+#     deleted_images_folder="Threads/deleted/images"
+# )
 # print(json.dumps(a, indent=4))

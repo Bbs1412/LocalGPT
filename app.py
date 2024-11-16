@@ -73,9 +73,10 @@ if 'last_saved' not in st.session_state:
 if 'folder' not in st.session_state:
     st.session_state.folder = {
         'threads': "./Threads",
-        'deleted': "./Threads/deleted",
+        'deleted_threads': "./Threads/deleted",
         'images': "./Threads/images",
-        'temp': "./Threads/temp"
+        'temp': "./Threads/temp",
+        'deleted_images': "Threads/deleted/images",
     }
 
     # Create the folders if they don't exist:
@@ -110,14 +111,6 @@ def get_timestamp():
     return datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
 
-# Get the time-stamp of the current time, suitable for filenames:
-def get_timestamp_filename():
-    """Get current timestamp in a formatted string, suitable for filenames
-
-    Returns:
-        str: Formatted timestamp
-    """
-    return datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
 
 
 def write_as_ai(message: str):
@@ -247,6 +240,7 @@ def get_response(full_response: bool = False):
 # ---------------------------------------------------------------------------------------
 # Thread Functions:
 # ---------------------------------------------------------------------------------------
+
 def load_conversation_helper_fn(thread_name: str):
     """Helper function to load the conversation of the selected thread
 
@@ -268,6 +262,35 @@ def load_conversation_helper_fn(thread_name: str):
         st.session_state.thread_name = resp['thread_name']
         st.session_state.model = resp['model_name']
         st.session_state.last_saved = resp['last_saved']
+        st.rerun()
+
+
+def delete_thread_helper_fn(
+        thread_name: str
+        ):
+    """Helper function to delete the selected thread
+
+    Args:
+        thread_name (str): Name of the thread to delete
+    """
+    # Delete the thread:
+    resp = app_threads.delete_thread(
+        thread_name=thread_name,
+        thread_folder=st.session_state.folder['threads'],
+        deleted_threads_folder=st.session_state.folder['deleted_threads'],
+        image_folder=st.session_state.folder['images'],
+        deleted_images_folder=st.session_state.folder['deleted_images']
+    )
+
+    if resp['status'] == 'error':
+        st.error(f"Error in deleting thread and its files: {resp['message']}")
+        
+    else:
+        st.session_state.thread_name = "New Thread"
+        st.session_state.pop('messages')
+
+        st.toast(f"Thread `{thread_name}` deleted successfully!",
+                icon=st.session_state.icons['delete_thread'])
         st.rerun()
 
 # ---------------------------------------------------------------------------------------
@@ -399,7 +422,7 @@ for ind, i in enumerate(threads):
             key=f'del_{i}',
             type='secondary',
             use_container_width=True,
-            on_click=lambda i=i: delete_thread(i),
+            on_click=lambda i=i: delete_thread_helper_fn(i),
         )
     )
 
