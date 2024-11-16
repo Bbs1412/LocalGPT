@@ -10,6 +10,7 @@
 import os
 import json
 from datetime import datetime
+from app_images import image_list_to_base64
 
 
 def get_timestamp():
@@ -21,10 +22,12 @@ def get_timestamp():
     return datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
 
-#
-
 # Function to save conversation to a file:
-def save_conversation(messages: list[dict], thread_name: str, model_name: str, folder: str):
+def save_conversation(
+        messages: list[dict],
+        thread_name: str,
+        model_name: str,
+        thread_folder: str):
     """Save the conversation to a json file and update the config in same file with the last used model name
     """
     ts = get_timestamp()
@@ -38,12 +41,12 @@ def save_conversation(messages: list[dict], thread_name: str, model_name: str, f
         json_to_save = {
             "config": {
                 "model": model_name,
-                "last_updated": ts
+                "last_saved": ts
             },
             "messages": messages
         }
 
-        filename = f"{folder}/{thread_name}.json"
+        filename = f"{thread_folder}/{thread_name}.json"
         with open(filename, "w") as file:
             json.dump(json_to_save, file, indent=4)
 
@@ -53,38 +56,57 @@ def save_conversation(messages: list[dict], thread_name: str, model_name: str, f
         return {"status": "error", "message": f"Failed to save thread. \n\n {str(e)}"}
 
 
-# # function to load conversation from a file:
-# def load_conversation(thread_name: str = "conversation_history"):
-#     """Load the conversation from a json file and set the model to the last used model
+# function to load conversation from a file:
+def load_conversation(thread_name: str, thread_folder: str, image_folder: str):
+    """Load the conversation from a json file and set the model to the last used model
 
-#     Args:
-#         filename (str, optional): Filename to load the conversation. Defaults to "conversation_history.json".
-#     """
-#     filename = f"{st.session_state.thread_folder}/{thread_name}.json"
-#     with open(filename, "r") as file:
-#         st.session_state.messages = json.load(file)
+    Args:
+        thread_name (str): Name of the thread to load
+        thread_folder (str): Folder where the thread is saved
 
-#     # Set the thread name from the filename
-#     st.session_state.thread_name = thread_name
+    Returns:
+        dict: Dictionary containing the messages, thread name, model name and last saved timestamp
+    """
 
-#     # Get the last modified time of the file (this will be the last saved timestamp)
-#     last_modified_time = os.path.getmtime(filename)
-#     st.session_state.last_saved = datetime.fromtimestamp(
-#         last_modified_time).strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        filename = f"{thread_folder}/{thread_name}.json"
 
-#     # Load the last used model as well:
-#     config_path = f"{st.session_state.thread_folder}/{st.session_state.config_file}"
-#     with open(config_path, 'r') as file:
-#         config = json.load(file)
+        with open(filename, "r") as file:
+            thread_json = json.load(file)
 
-#     if thread_name not in config:
-#         st.session_state.model = st.session_state.default_model
-#     else:
-#         st.session_state.model = config[thread_name]
+        last_saved = thread_json.get("config", {}).get(
+            "last_saved", get_timestamp())
+        model_name = thread_json.get("config", {}).get("model", None)
+        messages = thread_json.get("messages", [])
+
+        # Add base64 images to the messages based on the image file paths:
+        for message in messages:
+            if message.get("role") == "user" and "image_files" in message:
+                resp = image_list_to_base64(
+                    image_list=message["image_files"],
+                    image_folder=image_folder,
+                    thread_name=thread_name
+                )
+
+                if resp["status"] == "success":
+                    message["images"] = resp["result"]
+                else:
+                    # If there is error in processing some single image, return the error message of that image as it is
+                    return resp
+
+        return {
+            "status": "success",
+            "messages": messages,
+            "thread_name": thread_name,
+            "model_name": model_name,
+            "last_saved": last_saved
+        }
+
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to load thread. \n\n {str(e)}"}
+
 
 # # Rename the thread file:
-
-
 # def rename_thread(new_name: str):
 #     """Rename the thread and its json file
 
@@ -160,7 +182,7 @@ def save_conversation(messages: list[dict], thread_name: str, model_name: str, f
 # Test calls:
 # ---------------------------------------------------------------------------------------
 
-# Save conversation:
+# # Save conversation:
 # messages = [
 #     {
 #         "role": "ai",
@@ -180,3 +202,13 @@ def save_conversation(messages: list[dict], thread_name: str, model_name: str, f
 #     model_name="bs3.1:latest",
 #     folder="Threads"
 # )
+
+
+# # Load conversation:
+# conversation = load_conversation(
+#     thread_name="test_save_thread",
+#     thread_folder="Threads",
+#     image_folder="Threads/images"
+# )
+
+# print(json.dumps(conversation, indent=4))
