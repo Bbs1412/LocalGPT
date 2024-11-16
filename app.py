@@ -247,7 +247,7 @@ def get_response(full_response: bool = False):
 # ---------------------------------------------------------------------------------------
 # Thread Functions:
 # ---------------------------------------------------------------------------------------
-def load_conversation_helper_fn(thread_name:str):
+def load_conversation_helper_fn(thread_name: str):
     """Helper function to load the conversation of the selected thread
 
     Args:
@@ -342,7 +342,29 @@ new_thread_name = cont.text_input(
 
 # Rename thread file if name changed
 if new_thread_name != st.session_state.thread_name:
-    rename_thread(new_thread_name)
+    # rename_thread(new_thread_name)
+    resp = app_threads.rename_thread(
+        old_thread_name=st.session_state.thread_name,
+        new_thread_name=new_thread_name,
+        thread_folder=st.session_state.folder['threads'],
+    )
+
+    if resp['status'] == 'error':
+        st.error(f"Error in renaming thread: {resp['message']}")
+
+    else:
+        st.session_state.thread_name = new_thread_name
+
+        app_threads.save_conversation(
+            messages=st.session_state.messages,
+            thread_name=st.session_state.thread_name,
+            model_name=st.session_state.model,
+            thread_folder=st.session_state.folder['threads']
+        )
+
+        st.toast("Thread renamed successfully!",
+                 icon=st.session_state.icons['rename_thread'])
+
 
 # Show last saved timestamp (below thread name)
 if st.session_state.last_saved:
