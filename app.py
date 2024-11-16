@@ -250,7 +250,7 @@ def load_conversation_helper_fn(thread_name: str):
     # Load the conversation from the thread:
     resp = app_threads.load_conversation(
         thread_name=thread_name,
-        thread_folder=st.session_state.folder['threads']
+        thread_folder=st.session_state.folder['threads'],
         image_folder=st.session_state.folder['images']
     )
 
