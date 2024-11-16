@@ -124,8 +124,10 @@ def rename_thread(
 
         if os.path.exists(old_filename):
             os.rename(old_filename, new_filename)
+            return {"status": "success"}
+        else:
+            return {"status": "error", "message": "Thread not found"}
 
-        return {"status": "success"}
     except Exception as e:
         return {"status": "error", "message": f"Failed to rename thread. \n\n {str(e)}"}
 
@@ -217,3 +219,13 @@ def rename_thread(
 # )
 
 # print(json.dumps(conversation, indent=4))
+
+# # Rename thread:
+# a = rename_thread(
+#     old_thread_name="test_save_thread_renamed",
+#     new_thread_name="test_save_thread",
+#     thread_folder="Threads"
+# )
+
+# print(json.dumps(a, indent=4))
+
