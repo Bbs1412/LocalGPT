@@ -49,7 +49,12 @@ def get_running_models(temp_folder: str):
 
 
 def stop_running_models(running_models: list):
-    """Stop the running models."""
+    """Stop the running models.
+    
+    Args:
+        running_models (list): List of running models
+    """
     for model in running_models:
         subprocess.run(["ollama", "stop", model])
+        
 
