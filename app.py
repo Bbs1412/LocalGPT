@@ -417,7 +417,7 @@ if col1.button("Check Models"):
     models_sec.write(running_model_names)
 
 if col2.button("Stop Models"):
-    app_models.stop_running_models()
+    app_models.stop_running_models(running_models=running_model_names)
     models_sec.success("Stopped all running models.")
 
 
@@ -457,7 +457,8 @@ for message in st.session_state.messages:
         write_as_user(message)
 
 
-if inp := st.chat_input('Type your message / prompt here... [Attachments are also supported!!!]'):
+input_placeholder = "Type your message / prompt here... [Attachments are also supported!!!]"
+if inp := st.chat_input(input_placeholder):
     # If there are image attachments, then, need to handle them separately.
     # Implemented it in create_message function...
     create_message('user', inp)
@@ -501,6 +502,7 @@ if inp := st.chat_input('Type your message / prompt here... [Attachments are als
 # Upload File as System Prompt:
 # [ https://discuss.streamlit.io/t/how-do-i-replicate-chatgpt-file-upload-option-ui/51781/6 ]
 # ---------------------------------------------------------------------------------------
+
 # import time
 # chat_box = st.chat_input("What do you want to do?")
 
