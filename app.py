@@ -247,7 +247,28 @@ def get_response(full_response: bool = False):
 # ---------------------------------------------------------------------------------------
 # Thread Functions:
 # ---------------------------------------------------------------------------------------
-...
+def load_conversation_helper_fn(thread_name:str):
+    """Helper function to load the conversation of the selected thread
+
+    Args:
+        thread_name (str): Name of the thread to load
+    """
+    # Load the conversation from the thread:
+    resp = app_threads.load_conversation(
+        thread_name=thread_name,
+        thread_folder=st.session_state.folder['threads']
+        image_folder=st.session_state.folder['images']
+    )
+
+    if resp['status'] == 'error':
+        # There might be some error in image conversion here, or thread loading (json) can go wrong, all errors are handled here dynamically
+        st.error(f"Error: {resp['message']}")
+    else:
+        st.session_state.messages = resp['messages']
+        st.session_state.thread_name = resp['thread_name']
+        st.session_state.model = resp['model_name']
+        st.session_state.last_saved = resp['last_saved']
+        st.rerun()
 
 # ---------------------------------------------------------------------------------------
 # Sidebar Actions:
@@ -345,7 +366,7 @@ for ind, i in enumerate(threads):
             label=i,
             key=f't_{i}',
             use_container_width=True,
-            on_click=lambda i=i: load_conversation(i),
+            on_click=lambda i=i: load_conversation_helper_fn(i),
             disabled=True if i == st.session_state.thread_name else False
         )
     )
@@ -442,7 +463,7 @@ if inp := st.chat_input('Type your message / prompt here... [Attachments are als
             messages=st.session_state.messages,
             thread_name=st.session_state.thread_name,
             model_name=st.session_state.model,
-            folder=st.session_state.folder['threads']
+            thread_folder=st.session_state.folder['threads']
         )
 
         if resp['status'] == 'error':
