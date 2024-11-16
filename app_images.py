@@ -131,48 +131,48 @@ def image_list_to_base64(image_list: list, image_folder: str, thread_name: str):
         return {"status": "success", "result": base64_images}
 
 
-def get_image_from_b64(base64_string: str, mime: str):
-    """ Get the image from the base64 string
+# def get_image_from_b64(base64_string: str, mime: str):
+#     """ Get the image from the base64 string
 
-    Args:
-        base64_string (str): Base64 encoded image
-        mime (str): MIME type of the image
+#     Args:
+#         base64_string (str): Base64 encoded image
+#         mime (str): MIME type of the image
 
-    Returns:
-        dict: Dictionary containing the status and path of the saved image
-    """
+#     Returns:
+#         dict: Dictionary containing the status and path of the saved image
+#     """
 
-    # create temp_images directory if it does not exist
-    if not os.path.exists("temp_images"):
-        os.makedirs("temp_images")
+#     # create temp_images directory if it does not exist
+#     if not os.path.exists("temp_images"):
+#         os.makedirs("temp_images")
 
-    # generate a random path to save the image
-    save_path = f"temp_images/{get_timestamp()}.{mime}"
+#     # generate a random path to save the image
+#     save_path = f"temp_images/{get_timestamp()}.{mime}"
 
-    try:
-        # Decode the base64 string
-        decoded_image = base64.b64decode(base64_string)
+#     try:
+#         # Decode the base64 string
+#         decoded_image = base64.b64decode(base64_string)
 
-        # Save the image to the specified path
-        with open(save_path, "wb") as image_file:
-            image_file.write(decoded_image)
+#         # Save the image to the specified path
+#         with open(save_path, "wb") as image_file:
+#             image_file.write(decoded_image)
 
-        return {"status": "success", "path": save_path}
+#         return {"status": "success", "path": save_path}
 
-    except Exception as e:
-        return {"status": "error", "message": f"Error: {e}"}
+#     except Exception as e:
+#         return {"status": "error", "message": f"Error: {e}"}
 
 
-def clear_temp_images():
-    """Clears the temp_images directory"""
+# def clear_temp_images():
+#     """Clears the temp_images directory"""
 
-    for file in os.listdir("temp_images"):
-        file_path = os.path.join("temp_images", file)
-        try:
-            if os.path.isfile(file_path):
-                os.unlink(file_path)
-        except Exception as e:
-            print(f"Error: {e}")
-    print("Temp images cleared")
+#     for file in os.listdir("temp_images"):
+#         file_path = os.path.join("temp_images", file)
+#         try:
+#             if os.path.isfile(file_path):
+#                 os.unlink(file_path)
+#         except Exception as e:
+#             print(f"Error: {e}")
+#     print("Temp images cleared")
 
 # print(get_image_from_b64("sdsdf"))
