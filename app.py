@@ -1,15 +1,14 @@
 # streamlit basic code:
 import os
 import json
-import base64
 import ollama
-import app_images
 import app_models
-import streamlit as st
+import app_images
+import app_threads
 from time import sleep
+import streamlit as st
 from typing import Literal
 from datetime import datetime
-
 # ---------------------------------------------------------------------------------------
 # Config and Sidebar:
 # ---------------------------------------------------------------------------------------
@@ -47,6 +46,9 @@ if 'icons' not in st.session_state:
         'delete_thread': "🗑️",
 
         'rename_thread': "🎫",
+
+        # 'save_thread': "💾" or "✅"
+        'save_thread': "✅",
     }
 
 if 'debug' not in st.session_state:
@@ -68,8 +70,18 @@ if "messages" not in st.session_state:
 if 'last_saved' not in st.session_state:
     st.session_state.last_saved = None
 
-if 'thread_folder' not in st.session_state:
-    st.session_state.thread_folder = "./Threads"
+if 'folder' not in st.session_state:
+    st.session_state.folder = {
+        'threads': "./Threads",
+        'deleted': "./Threads/deleted",
+        'images': "./Threads/images",
+        'temp': "./Threads/temp"
+    }
+
+    # Create the folders if they don't exist:
+    for folders in st.session_state.folder.values():
+        if not os.path.exists(folders):
+            os.makedirs(folders)
 
 if 'config_file' not in st.session_state:
     # ./threads/config.json
@@ -81,10 +93,6 @@ if 'info' not in st.session_state:
         st.session_state.info['features'] = file.read()
     with open("assets/app_help.md", "r") as file:
         st.session_state.info['help'] = file.read()
-
-if "temp_cleared" not in st.session_state:
-    app_images.clear_temp_images()
-    st.session_state.temp_cleared = True
 
 # ---------------------------------------------------------------------------------------
 # Functions:
@@ -236,154 +244,10 @@ def get_response(full_response: bool = False):
         yield chunk["message"]["content"]
 
 
-def update_config_file(thread_name, model_name):
-    """Update the config file with the latest model and thread name
-
-    Args:
-        thread_name (str): Name of the thread
-        model_name (str): Name of the model
-    """
-    # update the config file with the latest model and thread name:
-    config_path = f"{st.session_state.thread_folder}/{st.session_state.config_file}"
-
-    # Step 1: Read the existing config file
-    try:
-        with open(config_path, 'r') as file:
-            config = json.load(file)
-    except FileNotFoundError:
-        # If the file doesn't exist, create an empty config dictionary
-        config = {}
-
-    # Step 2: Update the config dictionary with the latest model and thread name
-    config[thread_name] = model_name
-
-    # Step 3: Write the updated config dictionary back to the file
-    with open(config_path, 'w') as file:
-        json.dump(config, file, indent=4)
-
-
-# Function to save conversation to a file:
-def save_conversation(filename: str = "conversation_history.json"):
-    """Save the conversation to a json file and update the config file with the latest model and thread name
-
-    Args:
-        filename (str, optional): Filename to save the conversation. Defaults to "conversation_history.json".
-    """
-    if not os.path.exists(st.session_state.thread_folder):
-        os.makedirs(st.session_state.thread_folder)
-
-    with open(filename, "w") as file:
-        json.dump(st.session_state.messages, file, indent=4)
-
-    st.session_state.last_saved = get_timestamp()
-    # st.toast("Conversation saved successfully!", icon="📝")
-
-    update_config_file(st.session_state.thread_name, st.session_state.model)
-
-
-# function to load conversation from a file:
-def load_conversation(thread_name: str = "conversation_history"):
-    """Load the conversation from a json file and set the model to the last used model
-
-    Args:
-        filename (str, optional): Filename to load the conversation. Defaults to "conversation_history.json".
-    """
-    filename = f"{st.session_state.thread_folder}/{thread_name}.json"
-    with open(filename, "r") as file:
-        st.session_state.messages = json.load(file)
-
-    # Set the thread name from the filename
-    st.session_state.thread_name = thread_name
-
-    # Get the last modified time of the file (this will be the last saved timestamp)
-    last_modified_time = os.path.getmtime(filename)
-    st.session_state.last_saved = datetime.fromtimestamp(
-        last_modified_time).strftime("%Y-%m-%d %H:%M:%S")
-
-    # Load the last used model as well:
-    config_path = f"{st.session_state.thread_folder}/{st.session_state.config_file}"
-    with open(config_path, 'r') as file:
-        config = json.load(file)
-
-    if thread_name not in config:
-        st.session_state.model = st.session_state.default_model
-    else:
-        st.session_state.model = config[thread_name]
-
-# Rename the thread file:
-
-
-def rename_thread(new_name: str):
-    """Rename the thread and its json file
-
-    Args:
-        new_name (str): New name for the thread and json file
-    """
-    old_filename = f"{st.session_state.thread_folder}/{st.session_state.thread_name}.json"
-    new_filename = f"{st.session_state.thread_folder}/{new_name}.json"
-
-    if os.path.exists(old_filename):
-        os.rename(old_filename, new_filename)
-
-    st.session_state.thread_name = new_name
-    save_conversation(f"{st.session_state.thread_folder}/{new_name}.json")
-    st.toast("Thread renamed successfully!",
-             icon=st.session_state.icons['rename_thread'])
-
-
-# Load thread names by latest first order:
-def load_thread_names():
-    """Load all the thread names present in the Threads folder, based on the last modified time of the file
-
-    Returns:
-        list: List of thread names
-    """
-    thread_names = []
-    files = []
-    for file in os.listdir(st.session_state.thread_folder):
-        if file.endswith(".json"):
-            if file != st.session_state.config_file:
-                files.append(file)
-
-    files.sort(key=lambda x: os.path.getmtime(
-        f"{st.session_state.thread_folder}/{x}"), reverse=True)
-
-    for file in files:
-        thread_names.append(file.split(".")[0])
-
-    return thread_names
-
-
-# Delete the thread:
-def delete_thread(thread_name: str):
-    """Deletes the thread from page view, but actually moves it to 'deleted' folder
-
-    Args:
-        thread_name (str): Name of the thread to delete
-    """
-
-    old_filename = f"{st.session_state.thread_folder}/{thread_name}.json"
-    new_filename = f"{st.session_state.thread_folder}/deleted/{thread_name}.json"
-
-    # Create deleted folder if not exists
-    if not os.path.exists(f"{st.session_state.thread_folder}/deleted"):
-        os.makedirs(f"{st.session_state.thread_folder}/deleted")
-
-    # If file already exists in deleted folder, add timestamp to new filename:
-    if os.path.exists(new_filename):
-        new_filename = f"{st.session_state.thread_folder}/deleted/{thread_name}_{get_timestamp_filename()}.json"
-
-    # Move the file to deleted folder
-    if os.path.exists(old_filename):
-        os.rename(old_filename, new_filename)
-
-    st.session_state.thread_name = "New Thread"
-    st.session_state.pop('messages')
-    # st.rerun()
-
-    st.toast(f"Thread `{thread_name}` deleted successfully!",
-             icon=st.session_state.icons['delete_thread'])
-
+# ---------------------------------------------------------------------------------------
+# Thread Functions:
+# ---------------------------------------------------------------------------------------
+...
 
 # ---------------------------------------------------------------------------------------
 # Sidebar Actions:
@@ -574,8 +438,19 @@ if inp := st.chat_input('Type your message / prompt here... [Attachments are als
         st.write(e)
 
     finally:
-        save_conversation(
-            f"{st.session_state.thread_folder}/{st.session_state.thread_name}.json")
+        resp = app_threads.save_conversation(
+            messages=st.session_state.messages,
+            thread_name=st.session_state.thread_name,
+            model_name=st.session_state.model,
+            folder=st.session_state.folder['threads']
+        )
+
+        if resp['status'] == 'error':
+            st.error(f"Error: {resp['message']}")
+        else:
+            st.session_state.last_saved = resp['timestamp']
+
+            st.toast("Conversation saved successfully!", icon=st.session_state.icons['save_thread'])
 
 
 # ---------------------------------------------------------------------------------------
