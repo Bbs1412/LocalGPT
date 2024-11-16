@@ -372,7 +372,7 @@ if st.session_state.last_saved:
 
 
 # load all the saved thread names using files:
-threads = load_thread_names()
+threads = app_threads.load_thread_names(thread_folder=st.session_state.folder['threads'])
 
 # thread_buttons, thread_deletes = st.sidebar.columns([.85, .15])
 thread_buttons, thread_deletes = st.sidebar.columns([.95, .05], gap='small')

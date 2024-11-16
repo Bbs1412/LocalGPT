@@ -132,27 +132,29 @@ def rename_thread(
         return {"status": "error", "message": f"Failed to rename thread. \n\n {str(e)}"}
 
 
-# # Load thread names by latest first order:
-# def load_thread_names():
-#     """Load all the thread names present in the Threads folder, based on the last modified time of the file
+# Load thread names by latest first order:
+def load_thread_names(thread_folder: str):
+    """Load all the thread names present in the Threads folder, based on the last modified time of the file
 
-#     Returns:
-#         list: List of thread names
-#     """
-#     thread_names = []
-#     files = []
-#     for file in os.listdir(st.session_state.thread_folder):
-#         if file.endswith(".json"):
-#             if file != st.session_state.config_file:
-#                 files.append(file)
+    Args:
+        thread_folder (str): Folder where the threads are saved
 
-#     files.sort(key=lambda x: os.path.getmtime(
-#         f"{st.session_state.thread_folder}/{x}"), reverse=True)
+    Returns:
+        list: List of thread names
+    """
+    thread_names = []
+    files = []
+    for file in os.listdir(thread_folder):
+        if file.endswith(".json"):
+            files.append(file)
 
-#     for file in files:
-#         thread_names.append(file.split(".")[0])
+    files.sort(key=lambda x: os.path.getmtime(
+        f"{thread_folder}/{x}"), reverse=True)
 
-#     return thread_names
+    for file in files:
+        thread_names.append(file.split(".")[0])
+
+    return thread_names
 
 
 # # Delete the thread:
@@ -228,4 +230,3 @@ def rename_thread(
 # )
 
 # print(json.dumps(a, indent=4))
-
