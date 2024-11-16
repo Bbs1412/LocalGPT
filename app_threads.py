@@ -2,7 +2,7 @@
 # Image attachment are saved as the file paths in the json files
 # Since thread is loaded form the file only once, base64s will be created and attached in the json->st.session_state.messages at that time
 # But in rest (in the json saved), only the file paths will be saved
-# Now, once thread with base64s is loaded in st, we do not load the json file again and again. 
+# Now, once thread with base64s is loaded in st, we do not load the json file again and again.
 # Instead, st.session_state.messages (thread) is saved repeatedly in the json file
 # So, while saving the thread, we will remove the base64s (file paths remain as it is since they were not updated / removed).
 
@@ -10,6 +10,7 @@
 import os
 import json
 from datetime import datetime
+
 
 def get_timestamp():
     """Get current timestamp in a formatted string
@@ -20,20 +21,20 @@ def get_timestamp():
     return datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
 
-# 
+#
 
 # Function to save conversation to a file:
-def save_conversation(messages:list[dict], thread_name:str, model_name:str, folder:str):
+def save_conversation(messages: list[dict], thread_name: str, model_name: str, folder: str):
     """Save the conversation to a json file and update the config in same file with the last used model name
     """
     ts = get_timestamp()
 
     try:
-        # Remove the base64 images from the messages before saving
+        # Remove the base64 images from the messages before saving to json
         for message in messages:
             if message.get("role") == "user" and "images" in message:
                 del message["images"]
-        
+
         json_to_save = {
             "config": {
                 "model": model_name,
@@ -47,11 +48,9 @@ def save_conversation(messages:list[dict], thread_name:str, model_name:str, fold
             json.dump(json_to_save, file, indent=4)
 
         return {"status": "success", "timestamp": ts}
-    
+
     except Exception as e:
         return {"status": "error", "message": f"Failed to save thread. \n\n {str(e)}"}
-
-
 
 
 # # function to load conversation from a file:
@@ -156,3 +155,28 @@ def save_conversation(messages:list[dict], thread_name:str, model_name:str, fold
 
 #     st.toast(f"Thread `{thread_name}` deleted successfully!",
 #              icon=st.session_state.icons['delete_thread'])
+
+# ---------------------------------------------------------------------------------------
+# Test calls:
+# ---------------------------------------------------------------------------------------
+
+# Save conversation:
+# messages = [
+#     {
+#         "role": "ai",
+#                 "content": "Hello 👋, How may I help you?"
+#     },
+#     {
+#         "role": "user",
+#                 "content": "prompt",
+#                 "image_files": ["filename.png"],
+#                 "images": ["this base64 should be removed"]
+#     }
+# ]
+
+# save_conversation(
+#     messages=messages,
+#     thread_name="test_save_thread",
+#     model_name="bs3.1:latest",
+#     folder="Threads"
+# )
