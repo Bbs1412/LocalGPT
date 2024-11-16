@@ -8,11 +8,15 @@
         "content": "prompt",
         "image_files": [
             "filename.png",
-            "these image_files strings will be ignored by the LLM, since image_files is not a valid key in the LLM"
+            "filename2.png"
         ],
         "images": [
             "base64_encoded_image1",
             "base64_encoded_image2"
         ]
+    },
+    {
+        "important": "image_files (which is image file names) should not be passed to the LLM, only base_64 images should be passed, but due to limitation of the current implementation, image_files is also passed to the LLM, which should be ignored by the LLM as image_files is not a valid key for the LLM"
     }
 ]
+
