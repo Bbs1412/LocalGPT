@@ -61,11 +61,14 @@ if 'model' not in st.session_state:
     # st.session_state.model = "codellama:latest"
     st.session_state.model = st.session_state.default_model
 
-if "messages" not in st.session_state:
-    st.session_state.messages = [{
+if 'initial_message' not in st.session_state:
+    st.session_state.initial_message = [{
         "role": 'ai',
         "content": "Hello 👋, How may I help you?"
     }]
+
+if "messages" not in st.session_state:
+    st.session_state.messages = st.session_state.initial_message
 
 if 'last_saved' not in st.session_state:
     st.session_state.last_saved = None
@@ -109,8 +112,6 @@ def get_timestamp():
         str: Formatted timestamp
     """
     return datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-
-
 
 
 def write_as_ai(message: str):
@@ -262,12 +263,12 @@ def load_conversation_helper_fn(thread_name: str):
         st.session_state.thread_name = resp['thread_name']
         st.session_state.model = resp['model_name']
         st.session_state.last_saved = resp['last_saved']
-        st.rerun()
+        # st.rerun()
 
 
 def delete_thread_helper_fn(
         thread_name: str
-        ):
+):
     """Helper function to delete the selected thread
 
     Args:
@@ -284,14 +285,15 @@ def delete_thread_helper_fn(
 
     if resp['status'] == 'error':
         st.error(f"Error in deleting thread and its files: {resp['message']}")
-        
+
     else:
         st.session_state.thread_name = "New Thread"
+        new_thread_name = st.session_state.thread_name
         st.session_state.pop('messages')
 
         st.toast(f"Thread `{thread_name}` deleted successfully!",
-                icon=st.session_state.icons['delete_thread'])
-        st.rerun()
+                 icon=st.session_state.icons['delete_thread'])
+        # st.rerun()
 
 # ---------------------------------------------------------------------------------------
 # Sidebar Actions:
@@ -349,10 +351,23 @@ a.header(":green[Current Thread:]")
 btn = b.button("✍️", type='secondary', help="Create a new thread")
 
 if btn:
-    a = get_timestamp()
-    # st.session_state.thread_name = f"New Thread {a}"
-    st.session_state.thread_name = f"New Thread"
-    st.session_state.pop('messages')
+    resp = app_threads.create_new_thread(
+        thread_folder=st.session_state.folder['threads'])
+
+    st.session_state.thread_name = resp
+    st.session_state.messages = st.session_state.initial_message
+    st.session_state.last_saved = None
+
+    save_resp = app_threads.save_conversation(
+        messages=st.session_state.messages,
+        thread_name=st.session_state.thread_name,
+        model_name=st.session_state.model,
+        thread_folder=st.session_state.folder['threads']
+    )
+
+    st.toast("New thread created successfully!",
+             icon=st.session_state.icons['save_thread'])
+
     st.rerun()
 
 
@@ -395,7 +410,8 @@ if st.session_state.last_saved:
 
 
 # load all the saved thread names using files:
-threads = app_threads.load_thread_names(thread_folder=st.session_state.folder['threads'])
+threads = app_threads.load_thread_names(
+    thread_folder=st.session_state.folder['threads'])
 
 # thread_buttons, thread_deletes = st.sidebar.columns([.85, .15])
 thread_buttons, thread_deletes = st.sidebar.columns([.95, .05], gap='small')
@@ -436,11 +452,16 @@ models_sec = st.sidebar.expander("Running Models:", expanded=False)
 col1, col2 = models_sec.columns(2)
 
 if col1.button("Check Models"):
-    running_model_names = app_models.get_running_models()
+    running_model_names = app_models.get_running_models(
+        temp_folder=st.session_state.folder['temp'])
     models_sec.write(running_model_names)
 
 if col2.button("Stop Models"):
-    app_models.stop_running_models(running_models=running_model_names)
+    app_models.stop_running_models(
+        running_models=app_models.get_running_models(
+            temp_folder=st.session_state.folder['temp']
+        )
+    )
     models_sec.success("Stopped all running models.")
 
 
@@ -487,9 +508,6 @@ if inp := st.chat_input(input_placeholder):
     create_message('user', inp)
 
     try:
-        # temp_container = st.container(border=True)
-        # response_text = temp_container.write_stream(get_response())
-
         temp_container = st.container(border=True)
         logo_width = 0.6
         a, b = temp_container.columns([logo_width, 10-logo_width])

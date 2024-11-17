@@ -234,7 +234,20 @@ def delete_thread(
     except Exception as e:
         return {"status": "error", "message": f"Failed to delete thread. \n\n {str(e)}"}
     
-        
+
+def create_new_thread(thread_folder: str):
+    """Create a new thread with default values"""
+
+    thread_name = f"New Thread"
+
+    # Check the thread folder if thread_name already exists, if yes, add timestamp to the new thread name
+    if f"{thread_folder}/{thread_name}.json" in os.listdir(thread_folder):
+        thread_name = f"New Thread {get_timestamp_filename()}"
+
+    return thread_name
+       
+
+
 # ---------------------------------------------------------------------------------------
 # Test calls:
 # ---------------------------------------------------------------------------------------
