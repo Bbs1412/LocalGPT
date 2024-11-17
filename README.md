@@ -25,19 +25,24 @@ Added feature to Check and Stop Running Models
 Added Modularity to the code
 Added Image Support (LLama vision and Llava)
 
+# Iteration 7 (17/11/2024):
+Completely modularized the threads codes
+Refactored the image logic Completely
+
+
 # To do:
-- Change the temp_image clear from app.py to load_thread
-- So that, only the images of the thread are saved and rest all cleared
-
-- Instead of saving the thread data like model and all in separate files, save it in threads json directly 
-
-- Save the images in local file, store both local_path and user_path in the thread json
-
+- Save the images in local file, store in thread json
 - try except in the write_stream to save the half response at least in case of error
 
-- Save temp folder and thread folder names in the global variables / st.ssss
 
-- Check threads delete folder is auto created or not
+# Currently working on:
+- Comment out saved thread successfully around line 450 app.py
+- Update the docstring-s of functions in the app_threads file
+- Move the LLM model sidebar out of app.py
+
+- Update the parse image function to run subprocess and copy image from abs path to local folder
+- Check the thread_image_folder existence from the parse image function as it can be checked from anywhere else (if set in the st.ssss, it will fail in case new thread is created afterwards)
+- Downscaled image if greater than 720*720
 
 # Future plans:
 Integrate lang-chain in it
