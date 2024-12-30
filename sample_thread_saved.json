@@ -16,5 +16,6 @@
                 "filename2.png"
             ]
         }
-    ]
+    ],
+    "important-note": "image base64 are not saved locally, rather, only the file names of images are saved locally. And, when the load_thread is called, the image base64 are dynamically created and added for the first time in the message history. And again, while saving the thread, only the file names of the images are saved, not the base64 images."
 }
