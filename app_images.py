@@ -1,5 +1,6 @@
 import os
 import base64
+import shutil
 from datetime import datetime
 
 
@@ -63,6 +64,65 @@ def parse_images_from_prompt(prompt: str):
         return {"status": "error", "message": "Some error occurred while parsing the images"}
 
 
+def save_images_locally(image_list: list, image_folder: str, thread_name: str):
+    """Saves the images locally in the specified thread folder from the list of image paths (passed by user from anywhere in the system)
+
+    Args:
+        image_list (list): List of image paths
+        image_folder (str): Image folder path under which the images are to be stored
+        thread_name (str): Name of the thread (to create subfolder under image_folder)
+
+    Returns:
+        dict: Dictionary containing the status and path of the saved images
+    """
+
+    # Create the thread folder if it does not exist
+    thread_images_folder = os.path.join(image_folder, thread_name)
+    os.makedirs(thread_images_folder, exist_ok=True)
+
+    error_flag = False
+    error_log = ""
+    error_path = ""
+
+    local_image_list = []
+    for image_path in image_list:
+        try:
+            # Validate the image path exists
+            if not os.path.exists(image_path):
+                error_flag = True
+                error_log = f"Error: Image not found at path: {image_path}"
+                error_path = image_path
+                break
+
+            # Copy the image to the thread folder
+            # old_image_path = image_path
+            # new_image_path = f"{image_folder}/{thread_name}/{os.path.basename(image_path)}"
+            base_name = os.path.basename(image_path)
+            new_image_path = os.path.join(thread_images_folder, base_name)
+
+            # Append timestamp if the file already exists
+            if os.path.exists(new_image_path):
+                timestamp = get_timestamp()
+                name, ext = os.path.splitext(base_name)
+                new_image_path = os.path.join(
+                    thread_images_folder, f"{name}_{timestamp}{ext}")
+
+            # Copy the file to the new path
+            shutil.copy(image_path, new_image_path)
+            local_image_list.append(os.path.basename(new_image_path))
+
+        except Exception as e:
+            error_flag = True
+            error_log += f"Error: {e}"
+            error_path = image_path
+            break
+
+    if error_flag:
+        return {"status": "error", "message": error_log, "path": error_path}
+    else:
+        return {"status": "success", "image_list": local_image_list}
+
+
 def path_to_base64(image_path: str):
     """Converts the image at the path to base64 format
 
@@ -81,12 +141,14 @@ def path_to_base64(image_path: str):
                 image_file.read()).decode('utf-8')
 
         # Determine the MIME type based on file extension
-        # mime_type = image_path.split('.')[-1].lower()
-        # if mime_type not in ["png", "jpg", "jpeg", "gif", "bmp", "webp"]:
-        #     raise ValueError("Unsupported image format")
-        # return {"status": "success", "result": encoded_string, "mime_type": mime_type}
+        mime_type = image_path.split('.')[-1].lower()
+        if mime_type not in ["png", "jpg", "jpeg", "gif", "bmp", "webp"]:
+            raise ValueError("Unsupported image format")
 
-        return {"status": "success", "result": encoded_string}
+        return {"status": "success", "result": encoded_string, "mime_type": mime_type}
+        
+        # return {"status": "success", "result": encoded_string}
+
 
     except Exception as e:
         return {'status': "error", "message": f"Error: {e}", "path": image_path}
@@ -105,6 +167,7 @@ def image_list_to_base64(image_list: list, image_folder: str, thread_name: str):
     """
 
     base64_images = []
+    mimes = []
     error_flag = False
     error_log = ""
     error_path = ""
@@ -120,15 +183,16 @@ def image_list_to_base64(image_list: list, image_folder: str, thread_name: str):
             error_log += f"Error: {result['message']}"
             error_path = result['path']
             break
-            
+
         else:
             base64_images.append(result['result'])
+            mimes.append(result['mime_type'])
 
     # Return the failure of processing single image as failure of processing entire list of images!!! The error of that particular image is returned as it is:
     if error_flag:
         return {"status": "error", "message": error_log, "path": error_path}
     else:
-        return {"status": "success", "result": base64_images}
+        return {"status": "success", "result": base64_images, "mime_types": mimes}
 
 
 # def get_image_from_b64(base64_string: str, mime: str):
