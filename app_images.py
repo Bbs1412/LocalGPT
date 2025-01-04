@@ -146,9 +146,6 @@ def path_to_base64(image_path: str):
             raise ValueError("Unsupported image format")
 
         return {"status": "success", "result": encoded_string, "mime_type": mime_type}
-        
-        # return {"status": "success", "result": encoded_string}
-
 
     except Exception as e:
         return {'status': "error", "message": f"Error: {e}", "path": image_path}
