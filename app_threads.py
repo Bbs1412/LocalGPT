@@ -32,12 +32,14 @@ def get_timestamp_filename():
     return datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
 
 
+# Read the file "./sample_thread.json" and "./sample_api_call.json" once to understand the structure of the json file and design of save and load functions.
 # Function to save conversation to a file:
 def save_conversation(
         messages: list[dict],
         thread_name: str,
         model_name: str,
-        thread_folder: str):
+        thread_folder: str
+):
     """Save the conversation to a json file and update the config in same file with the last used model name
 
     Args:
@@ -190,7 +192,7 @@ def delete_thread(
         deleted_threads_folder: str,
         image_folder: str,
         deleted_images_folder: str
-        ):
+):
     """Deletes the thread from page view, but actually moves it to 'deleted' folder
 
     Args:
@@ -225,7 +227,8 @@ def delete_thread(
 
         if os.path.exists(old_image_folder):
             for file in os.listdir(old_image_folder):
-                os.rename(f"{old_image_folder}/{file}", f"{new_image_folder}/{file}")
+                os.rename(f"{old_image_folder}/{file}",
+                          f"{new_image_folder}/{file}")
 
             os.rmdir(old_image_folder)
 
@@ -233,7 +236,7 @@ def delete_thread(
 
     except Exception as e:
         return {"status": "error", "message": f"Failed to delete thread. \n\n {str(e)}"}
-    
+
 
 def create_new_thread(thread_folder: str):
     """Create a new thread with default values"""
@@ -245,7 +248,6 @@ def create_new_thread(thread_folder: str):
         thread_name = f"New Thread {get_timestamp_filename()}"
 
     return thread_name
-       
 
 
 # ---------------------------------------------------------------------------------------
