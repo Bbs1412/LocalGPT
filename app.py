@@ -132,21 +132,31 @@ def write_as_user(message: str):
     """
     with st.chat_message("user", avatar=st.session_state.icons['user']):
         st.write(message['content'])
+
         # if there are images, then show them as well
-        if 'images' in message:
-            # if there are multiple, make the n columns and show them
-            col_list = st.columns(len(message['images']))
 
-            # for i in range(cnt):
-            for i, (img, mime) in enumerate(zip(message['images'], message['mimes'])):
-                resp = app_images.get_image_from_b64(img, mime)
+        # Path till the image: './Threads/images/thread_name'
+        image_folder = os.path.join(
+            st.session_state.folder['images'], st.session_state.thread_name)
 
-                if resp['status'] == 'error':
-                    st.error(
-                        f"Error: Some error occurred while showing the image: {resp['message']}")
-                else:
-                    col_list[i].image(resp['path'], use_column_width=True)
-                    # st.image(resp['path'], width=150)
+        if 'image_files' in message:
+            # Debug: st.info(message['image_files'])
+
+            if len(message['image_files']) == 1:
+                st.image(
+                    os.path.join(image_folder, message['image_files'][0]),
+                    width=200
+                )
+
+            else:
+                # if there are multiple, make the n columns and show them
+                col_list = st.columns(len(message['image_files']))
+
+                for i, image_file in enumerate(message['image_files']):
+                    col_list[i].image(
+                        os.path.join(image_folder, image_file),
+                        use_column_width=True
+                    )
 
 
 why = """
@@ -163,48 +173,72 @@ def create_message(role: Literal['user', 'ai'], content: str):
         role (Literal['user', 'ai']): Role of the message (User or AI)
         content (str): Content of the message
     """
-    # new_msg = {"role": role, "content": content}
-    # st.session_state.messages.append(new_msg)
 
-    # Check for images in the user's prompt content:
-    # +++{image: ["path/to/image.jpg", "image2.png"]}+++
-    if role == 'user':
+    def handle_error(error_message):
+        """Handles errors by displaying them and returning an error response."""
+        st.error(error_message)
+        return {
+            "status": "error",
+            "content": error_message,
+        }
+
+    def process_user_message(content):
+        """Processes the user's message, handling images if present."""
+
+        # Check if the user's message contains images:
         has_image = app_images.check_if_image_in_prompt(content)
-        if has_image:
-            # Extract the images from the prompt:
-            contents = app_images.parse_images_from_prompt(content)
+        if not has_image:
+            return {"role": role, "content": content}
 
-            if contents['status'] == 'error':
-                st.error(
-                    f"Error: Error in separating the prompt and images from the input")
-                st.error(f"Error: {contents['message']}")
-                return
+        # Extract the images from the prompt:
+        contents = app_images.parse_images_from_prompt(content)
+        if contents['status'] == 'error':
+            return handle_error(f"Error parsing images: {contents['message']}")
 
-            else:
-                # Convert the image paths to base64:
-                b64_img_list = app_images.image_list_to_base64(
-                    contents['image_list'])
+        # Save the parsed images to the (local) thread's image folder:
+        resp = app_images.save_images_locally(
+            image_list=contents['image_list'],
+            image_folder=st.session_state.folder['images'],
+            thread_name=st.session_state.thread_name,
+        )
+        if resp['status'] == 'error':
+            return handle_error(f"Error saving images: {resp['message']} for `{resp['path']}`")
 
-                if b64_img_list['status'] == 'error':
-                    st.error(
-                        f"Error: {b64_img_list['message']} for `{b64_img_list['path']}`")
-                    return
+        # Convert the image paths to base64's:
+        b64_img_list = app_images.image_list_to_base64(
+            image_list=resp['image_list'],
+            image_folder=st.session_state.folder['images'],
+            thread_name=st.session_state.thread_name,
+        )
+        if b64_img_list['status'] == 'error':
+            return handle_error(f"Error converting images to base64: {b64_img_list['message']} for `{b64_img_list['path']}`")
 
-                new_msg = {
-                    "role": role,
-                    "content": contents['prompt'],
-                    "images": b64_img_list['result'],
-                    "mimes": b64_img_list['mime_types']
-                }
+        # Construct the message with images
+        return {
+            "role": role,                                   # ai or user
+            # text part of prompt
+            "content": contents['prompt'],
+            "images": b64_img_list['result'],               # mime (jpg png)
+            "mimes": b64_img_list['mime_types'],            # image in base64
+            # local paths of the images saved
+            "image_files": resp['image_list']
+        }
 
-        else:
-            new_msg = {"role": role, "content": content}
-
+    # Main function logic
+    if role == 'user':
+        new_msg = process_user_message(content)
+        if new_msg.get("status") == "error":
+            new_msg = {"role": role, "content": f'{new_msg["content"]}'}
+            # return  # Exit early on error
+        # else:
+        #   directly the new_msg will be used as returned from the process_user_message()
     else:
         new_msg = {"role": role, "content": content}
 
+    # Append the new message to the thread:
     st.session_state.messages.append(new_msg)
 
+    # Write the message to the chat as per the role:
     if role == 'ai':
         write_as_ai(new_msg)
     else:
@@ -493,7 +527,7 @@ st.subheader(
     f'✨:blue[MyGPT Local :]  {st.session_state.thread_name}', divider='rainbow')
 
 
-# Write olf messages on every rerun
+# Write old messages on every rerun
 for message in st.session_state.messages:
     if message['role'] == 'ai':
         write_as_ai(message)
