@@ -1,49 +1,90 @@
-# LocalGPT
-Clone of ChatGPT to get same functionality using open source LLMs offline, locally.
+# ✨ LocalGPT
+- Clone of ChatGPT to get same functionality using open source LLMs offline, locally.
+- Gives interface to interact with LLMs installed locally via Ollama and Streamlit.
 
----
-
-# Iteration 1 (23/10/2024):
-Making a good UI to interact with LLMs
-
-# Iteration 2 (24/10/2024):
-Adding a feature to save the model and load it later
-
-# Iteration 3 (25/10/2024):
-Loading the thread names based on their modification datetime
-
-# Iteration 4 (25/10/2024):
-Delete threads using button
-
-# Iteration 5 (26/10/2024):
-Feature to save the last used LLM with the thread
-Open it automatically with that thread...
-
-# Iteration 6 (16/11/2024):
-Changed UI
-Added feature to Check and Stop Running Models
-Added Modularity to the code
-Added Image Support (LLama vision and Llava)
-
-# Iteration 7 (17/11/2024):
-Completely modularized the threads codes
-Refactored the image logic Completely
+## Index:
+- [LocalGPT](#localgpt)
+- [Project Details](#project-details)
+    - [Aim](#aim)
+    - [Features](#features)
+    - [Tech Stack](#tech-stack)
+    - [Screenshots](#screenshots)
+- [Steps to run](#steps-to-run)
+- [Contributions](#contributions)
+- [License](#license)
+- [Contact](#contact)
 
 
-# To do:
-- Save the images in local file, store in thread json
-- try except in the write_stream to save the half response at least in case of error
+## Project Details:
+### Aim:
+To provide an interface to interact with LLMs installed locally, offline, and to save the threads and models used for later use.
+
+### Features:
+- Runs Locally with Streamlit
+- Any model from Ollama can be used
+- Supports Streaming Responses with Live Preview
+- Support attachments like Images for vision models like LLama Vision and LLava
+- Supports Threads (Chat Archives)
+- Can rename, create and delete threads
+- Threads are listed as per last used
+- Remembers the last model used with thread, which is auto-loaded next time
+- Can switch between models within same thread
+- Running models can be checked and stopped
+
+### Tech Stack:
+- Python
+- Streamlit
+- Ollama
+
+### Screenshots:
+- **Home Page:**
+    ![Home Page](assets/ss_home.png)
+- **Sample Prompt:**
+    ![Sample Prompt](assets/ss_sample.png)
+- **Running Models:**
+    ![Running Models](assets/ss_running.png)
+- **Image support:**
+    ![Vision Model Support](assets/ss_image.png)
+
+## Steps to run:
+
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/Bbs1412/LocalGPT
+    ```
+    
+1. Navigate to the project directory:
+    ```bash
+    cd LocalGPT
+    ```
+
+1. Install the required packages:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+1. Run the app:
+    ```bash
+    streamlit run app.py
+    ```
+
+1. Open the link in the browser:
+    ```bash
+    http://localhost:8501
+    ```
 
 
-# Currently working on:
-- Comment out saved thread successfully around line 450 app.py
-- Update the docstring-s of functions in the app_threads file
-- Move the LLM model sidebar out of app.py
+## Contributions:
+   Any contributions or suggestions are welcome! 
 
-- Update the parse image function to run subprocess and copy image from abs path to local folder
-- Check the thread_image_folder existence from the parse image function as it can be checked from anywhere else (if set in the st.ssss, it will fail in case new thread is created afterwards)
-- Downscaled image if greater than 720*720
 
-# Future plans:
-Integrate lang-chain in it
+## License: 
+![Code-License](https://img.shields.io/badge/License-MIT%20License-green.svg)
+- This project is licensed under the `MIT License`
+- See the [LICENSE](LICENSE) file for details.
+- You can use the code with proper credits to the author.
 
+
+## Contact:
+- **Email -** [bhushanbsongire@gmail.com](mailto:bhushanbsongire@gmail.com)
+- **LinkedIn -** [/bhushan-songire](https://www.linkedin.com/in/bhushan-songire/)
