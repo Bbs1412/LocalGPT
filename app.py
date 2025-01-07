@@ -36,8 +36,8 @@ st.logo("./assets/infinity.ico")
 
 if 'icons' not in st.session_state:
     st.session_state.icons = {
-        # 'ai' : "ai" or "🤖" or "https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg",
-        'ai': "./assets/icon_ai.svg",
+        # "assistant" : "assistant" or "🤖" or "https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg",
+        "assistant": "./assets/icon_ai.svg",
 
         # 'user' : "user" or "🕵️" or "./assets/icon_user.png",
         'user': "./assets/icon_user.png",
@@ -63,7 +63,7 @@ if 'model' not in st.session_state:
 
 if 'initial_message' not in st.session_state:
     st.session_state.initial_message = [{
-        "role": 'ai',
+        "role": "assistant",
         "content": "Hello 👋, How may I help you?"
     }]
 
@@ -120,7 +120,7 @@ def write_as_ai(message: str):
     Args:
         message (string): Content to write into that entry
     """
-    with st.chat_message("ai", avatar=st.session_state.icons['ai']):
+    with st.chat_message("assistant", avatar=st.session_state.icons["assistant"]):
         st.markdown(message['content'])
 
 
@@ -155,7 +155,8 @@ def write_as_user(message: str):
                 for i, image_file in enumerate(message['image_files']):
                     col_list[i].image(
                         os.path.join(image_folder, image_file),
-                        use_column_width=True
+                        # use_column_width=True
+                        use_container_width=True
                     )
 
 
@@ -166,11 +167,11 @@ why = """
 """
 
 
-def create_message(role: Literal['user', 'ai'], content: str):
+def create_message(role: Literal['user', "assistant"], content: str):
     """Creates a new message and appends it to the thread
 
     Args:
-        role (Literal['user', 'ai']): Role of the message (User or AI)
+        role (Literal['user', "assistant"]): Role of the message (User or AI)
         content (str): Content of the message
     """
 
@@ -239,7 +240,7 @@ def create_message(role: Literal['user', 'ai'], content: str):
     st.session_state.messages.append(new_msg)
 
     # Write the message to the chat as per the role:
-    if role == 'ai':
+    if role == "assistant":
         write_as_ai(new_msg)
     else:
         write_as_user(new_msg)
@@ -341,7 +342,7 @@ st.sidebar.title(":gear: :orange[Customize here:] ")
 # Load Model:
 available_models = []
 all_models = ollama.list()["models"]
-actual_names = [model['name'] for model in all_models]
+actual_names = [model['model'] for model in all_models]
 
 
 def model_mapper(model_name: str):
@@ -354,7 +355,7 @@ def model_mapper(model_name: str):
 for model in ollama.list()["models"]:
     model_family = model['details']['family'].ljust(8)
     model_parameters = model['details']['parameter_size'].rjust(8)
-    model_name = model['name']
+    model_name = model['model']
     # available_models.append(f'{model_family}{model_parameters} : {model_name}')
     available_models.append(f'{model_name} {model_parameters}')
 
@@ -529,7 +530,7 @@ st.subheader(
 
 # Write old messages on every rerun
 for message in st.session_state.messages:
-    if message['role'] == 'ai':
+    if message['role'] == "assistant":
         write_as_ai(message)
     else:
         write_as_user(message)
@@ -545,12 +546,12 @@ if inp := st.chat_input(input_placeholder):
         temp_container = st.container(border=True)
         logo_width = 0.6
         a, b = temp_container.columns([logo_width, 10-logo_width])
-        a.image(st.session_state.icons['ai'])
+        a.image(st.session_state.icons["assistant"])
         response_text = b.write_stream(get_response())
 
         # Store the full response, so in next run of the st app, we can display the full response in the chat (automatically)
         if inp:
-            create_message('ai', response_text)
+            create_message("assistant", response_text)
             st.rerun()
 
     except Exception as e:
