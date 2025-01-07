@@ -1,2 +1,11 @@
-streamlit
-ollama
+streamlit==1.41.1
+ollama==0.4.5
+
+# Tested with 
+# streamlit==1.41.1
+# ollama==0.4.5 -> use_container_width()
+# python version 3.11.10
+
+# Also tested with:
+# ollama = 0.3.3 -> use_column_width()
+# streamlit = 1.39.0
