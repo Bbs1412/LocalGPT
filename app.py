@@ -340,18 +340,14 @@ st.sidebar.title(":gear: :orange[Customize here:] ")
 
 
 # Load Model:
-available_models = []
 all_models = ollama.list()["models"]
 actual_names = [model['model'] for model in all_models]
 
+# Update the model name if the default set model is not available:
+if st.session_state.default_model not in actual_names:
+    st.session_state.model = actual_names[0]
 
-def model_mapper(model_name: str):
-    """Maps the modified model name to the actual name used by Ollama"""
-    ind = available_models.index(model_name)
-    return actual_names[ind]
-
-
-# Choose form available models:
+available_models = []
 for model in ollama.list()["models"]:
     model_family = model['details']['family'].ljust(8)
     model_parameters = model['details']['parameter_size'].rjust(8)
@@ -360,6 +356,15 @@ for model in ollama.list()["models"]:
     available_models.append(f'{model_name} {model_parameters}')
 
 
+def model_mapper(model_name: str):
+    """Maps the modified model name to the actual name used by Ollama"""
+    # Find the index of the model from modified names
+    ind = available_models.index(model_name)
+    # Return the actual name from the actual names list
+    return actual_names[ind]
+
+
+# Choose Model from available models:
 # st.write(model_mapper(available_models[4]))
 selected_model = st.sidebar.selectbox(
     label="Choose Model:",
