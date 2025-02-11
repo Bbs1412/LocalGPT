@@ -121,7 +121,16 @@ def write_as_ai(message: str):
         message (string): Content to write into that entry
     """
     with st.chat_message("assistant", avatar=st.session_state.icons["assistant"]):
-        st.markdown(message['content'])
+        msg = message['content']
+        if "<think>" in msg:
+            ind = msg.find("</think>") + len("</think>")
+            th = msg[8: ind-9]
+            rs = msg[ind:]
+
+            st.expander(label="Think", expanded=False, icon="💭").markdown(th)
+            st.markdown(rs)
+        else:
+            st.markdown(message['content'])
 
 
 def write_as_user(message: str):
