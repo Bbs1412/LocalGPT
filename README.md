@@ -45,6 +45,8 @@ To provide an interface to interact with LLMs installed locally, offline, and to
     ![Running Models](assets/ss_running.png)
 - **Image support:**
     ![Vision Model Support](assets/ss_image.png)
+- **"Thinking" Models:**
+    ![Thinking](assets/ss_think.png)
 
 ## Steps to run:
 
@@ -61,6 +63,12 @@ To provide an interface to interact with LLMs installed locally, offline, and to
 1. Install the required packages:
     ```bash
     pip install -r requirements.txt
+    ```
+
+1. Make sure Ollama server is running:
+    ```bash
+    # If not running already, start the server
+    ollama serve
     ```
 
 1. Run the app:
